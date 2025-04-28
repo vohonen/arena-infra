@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "Setting up environment..."
 apt update
-apt install zsh
+apt install -y zsh
 conda init zsh
 
 # Clone dotfiles repository
@@ -19,9 +19,9 @@ git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM
 git clone https://github.com/zsh-users/zsh-completions ${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions
   
 # Create symbolic links
-ln -sf ~/ai_dotfiles/.zshrc ~/.zshrc
-ln -sf ~/ai_dotfiles/.vimrc ~/.vimrc
-ln -sf ~/ai_dotfiles/.p10k.zsh ~/.p10k.zsh
+ln -s ~/ai_dotfiles/.zshrc ~/.zshrc
+ln -s ~/ai_dotfiles/.vimrc ~/.vimrc
+ln -s ~/ai_dotfiles/.p10k.zsh ~/.p10k.zsh
 
 # Reload Zsh to apply changes
 source ~/.zshrc
