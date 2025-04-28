@@ -1,5 +1,6 @@
-rm /etc/update-motd.d/10-help-text 
-rm /etc/update-motd.d/50-motd-news
+chmod -x /etc/update-motd.d/10-help-text 
+chmod -x /etc/update-motd.d/50-motd-news
+chmod -x /etc/update-motd.d/60-unminimize
 
 filename=/etc/update-motd.d/20-arena
 
@@ -14,4 +15,5 @@ echo '    echo "You are on ARENA machine $MACHINE_NAME";' >> $filename
 echo '    echo "";' >> $filename
 echo 'fi' >> $filename
 
+chmod +x $filename
 
