@@ -1,10 +1,12 @@
 #!/bin/bash
-
 echo "Setting up environment..."
+apt update
+apt install zsh
+conda init zsh
 
 # Clone dotfiles repository
 cd ~
-git clone https://github.com/nickypro/ai_dotfiles.git
+git clone https://github.com/nickypro/.arena_dotfiles.git
 
 # Install Oh My Zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -19,7 +21,6 @@ git clone https://github.com/zsh-users/zsh-completions ${ZSH_CUSTOM:-${ZSH:-~/.o
 # Create symbolic links
 ln -sf ~/ai_dotfiles/.zshrc ~/.zshrc
 ln -sf ~/ai_dotfiles/.vimrc ~/.vimrc
-ln -sf ~/ai_dotfiles/.gitconfig ~/.gitconfig
 ln -sf ~/ai_dotfiles/.p10k.zsh ~/.p10k.zsh
 
 # Reload Zsh to apply changes
