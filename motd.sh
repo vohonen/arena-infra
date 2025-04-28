@@ -8,12 +8,11 @@ echo '#!/bin/sh' > $filename
 echo '' >> $filename
 echo 'if [ -x /usr/bin/figlet ]; then' >> $filename
 echo '    /usr/bin/figlet ARENA' >> $filename
-echo '    echo "You are on ARENA machine $MACHINE_NAME";' >> $filename
 echo 'else' >> $filename
 echo '    echo "";' >> $filename
-echo '    echo "You are on ARENA machine $MACHINE_NAME";' >> $filename
-echo '    echo "";' >> $filename
 echo 'fi' >> $filename
+echo "echo 'You are on ARENA machine $MACHINE_NAME';" >> $filename
+echo 'echo "";' >> $filename
 
 chmod +x $filename
 
