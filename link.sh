@@ -23,4 +23,12 @@ ln -sf ~/.arena_dotfiles/.zshrc ~/.zshrc
 ln -sf ~/.arena_dotfiles/.vimrc ~/.vimrc
 ln -sf ~/.arena_dotfiles/.p10k.zsh ~/.p10k.zsh
 
+# Load machine name if present
+MACHINE_NAME="root"
+if [[ -r ~/.name ]]; then
+  source ~/.name
+fi
+
+# Update Login MOTD
 bash ~/.arena_dotfiles/motd.sh
+
