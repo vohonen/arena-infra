@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "Setting up environment..."
 apt update
-apt install -y zsh
+apt install -y zsh figlet
 conda init zsh
 
 # Clone dotfiles repository
@@ -23,3 +23,4 @@ ln -sf ~/.arena_dotfiles/.zshrc ~/.zshrc
 ln -sf ~/.arena_dotfiles/.vimrc ~/.vimrc
 ln -sf ~/.arena_dotfiles/.p10k.zsh ~/.p10k.zsh
 
+bash ~/.arena_dotfiles/motd.sh
