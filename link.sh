@@ -9,7 +9,7 @@ cd ~
 git clone https://github.com/nickypro/.arena_dotfiles.git
 
 # Install Oh My Zsh
-CHSH=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+CHSH=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
 # Install Zsh plugins
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
@@ -23,5 +23,3 @@ ln -sf ~/.arena_dotfiles/.zshrc ~/.zshrc
 ln -sf ~/.arena_dotfiles/.vimrc ~/.vimrc
 ln -sf ~/.arena_dotfiles/.p10k.zsh ~/.p10k.zsh
 
-# Reload Zsh to apply changes
-source ~/.zshrc
