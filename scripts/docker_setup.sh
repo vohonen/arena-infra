@@ -47,11 +47,6 @@ else
     echo "Warning: /root/ARENA_3.0/requirements.txt not found."
 fi
 
-echo "Setting up git remote for ARENA_3.0..."
-cd /root/ARENA_3.0 && git remote set-url origin "git@github.com:${ARENA_REPO}.git"
-cd /root # Return to root directory
-
-
 # --- SSH and Other Configurations ---
 echo "Adding GitHub to known_hosts..."
 mkdir -p /root/.ssh
