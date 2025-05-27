@@ -6,7 +6,7 @@ conda init zsh
 
 # Clone dotfiles repository
 cd ~
-git clone https://github.com/nickypro/.arena_dotfiles.git
+git clone https://github.com/nickypro/.arena_dotfiles.git ~/.arena_dotfiles
 
 # Install Oh My Zsh
 CHSH=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
@@ -30,5 +30,7 @@ if [[ -r ~/.name ]]; then
 fi
 
 # Update Login MOTD
-bash ~/.arena_dotfiles/motd.sh
+bash ~/.arena_dotfiles/scripts/motd.sh
 
+# make zsh default
+chsh -s "$(which zsh)" root
