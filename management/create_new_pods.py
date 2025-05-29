@@ -16,13 +16,15 @@ def create_specific_pods(pods_to_create):
     # Standard configuration for all pods
     base_config = {
         "image_name": "nickypro/arena-env:5.2",
-        "gpu_count": 1,
         "volume_in_gb": 20,
         "container_disk_in_gb": 100,
         "ports": "8888/http,22/tcp",
         "volume_mount_path": "/workspace",
         "gpu_type_id": "NVIDIA RTX A4000",
         "cloud_type": "COMMUNITY",
+        #"gpu_type_id": "NVIDIA A40",
+        #"cloud_type": "SECURE",
+        "gpu_count": 1,
     }
 
     # Get API key from environment
@@ -138,10 +140,10 @@ if __name__ == "__main__":
         "arena5-sierra",
         "arena5-tango",
 	    "arena5-uniform",
-        # "arena5-victor",
-        # "arena5-whiskey",
-        # "arena5-xray",
-        # "arena5-yankee",
-        # "arena5-zulu",
+        "arena5-victor",
+        "arena5-whiskey",
+        "arena5-xray",
+        "arena5-yankee",
+        "arena5-zulu",
     ]
     create_specific_pods(pods_to_create)
