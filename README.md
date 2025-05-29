@@ -5,7 +5,7 @@
 - the private key `cat ~/.ssh/shared_infra_key_name`
 - the public key `cat ~/.ssh/shared_infra_key_name.pub`
 
-2. **Setting up the machines**: [Setup and account with RunPod](https://link.nicky.pro/runpod) or another GPU provider. You can then either setup each machine manually, or use a script to set them up. We currently mostly use RunPod Community Cloud A4000s for most of the program. You can either:
+2. **Setting up the machines**: [Setup an account with RunPod](https://link.nicky.pro/runpod) or another GPU provider. You can then either setup each machine manually, or use a script to set them up. We currently mostly use RunPod Community Cloud A4000s for most of the program. You can either:
 
 - a. Set them up manually (if only a few machines):
     - Go to [https://link.nicky.pro/runpod](https://link.nicky.pro/runpod) and click on "Create Instance".
@@ -18,7 +18,7 @@
     - Run the script [./management/create_new_pods.py](./management/create_new_pods.py) with `python3 ./management/create_new_pods.py`
     - You can list all the machines you have created with `python3 ./management/nginx_pods.py`
 
-3. **Connecting to the machines**:
+3. **Connecting to the Machines - Get the SSH config**:
 - a. Manually (must be updated if a new machine is added):
     - Get the ip address of the machine you set up (either from the RunPod dashboard or by running `python3 ./management/nginx_pods.py`).
     - set up a ssh config file to forward packets through the proxy machine. This is done in the file `~/.ssh/config` by adding lines of the form:
@@ -69,6 +69,7 @@
 5. **Test the setup**:
 - ssh into the machine with `ssh arena-<machine_name>`, then run `python3 -c "import torch; print(torch.__version__)"` to make sure the environment is set up correctly.
 - run `bash ~/management/test_em.sh` to easily check pytorch is installed on all the machines.
+- try that you can connect to the machine using `Remote-SSH: Connect to Host...` in VSCode.
 
 6. **(optional) adding details and credentials to the machines**:
 - you can make it so that the users can push to a branch of the arena repo, by automatically deploying the branch to the machine when it is pushed to. This is done by adding a deploy key to the repo, and copying the ssh key to the machines, most easily done with the script `python3 ./management/setup_em.py`.
