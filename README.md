@@ -36,9 +36,9 @@
     - You should then be able to ssh into the machine with `ssh arena-<machine_name>`.
 
 - b. Automatic Forwarding (best if you have a lot of machines):
-    - I reccomend to set up a proxy machine (I use [hetzner](https://link.nicky.pro/hetzner), but you can use whatever you want). This should NOT use the shared_infra_key_name key, but instead your own ssh key.
+    - I reccomend to set up a proxy machine (I use [hetzner](https://link.nicky.pro/hetzner), but you can use whatever you want). **This should NOT use the `shared_infra_key_name` key**, but instead your own ssh key (if you don't already have one, you can generate one with `ssh-keygen -t ed25519 -C "proxy_key_name"`).
     - You will need to create a machine (I use the `CAX21` VPS template on hetzner with the latest version of ubuntu.)
-    - ssh into the new machine `ssh -i ~/.ssh/your_ssh_key user@<proxy_machine_ip>`, as described by hetzner or whatever service you use.
+    - ssh into the new machine `ssh root@<proxy_machine_ip>`, as described by hetzner or whatever service you use.
     - Install nginx with stream module and setup a config file to forward packets to the machines. Easiest way to do this is to run this command on the proxy machine:
     - `git clone https://github.com/nickypro/.arena_dotfiles.git && cd .arena_dotfiles/proxy && sudo bash setup_nginx.sh && cd ~`
     - Next, you need to add a config that maps each of cloud machines to a port on the proxy machine. If using runpod, this can be generated automatically with `python3 ./management/nginx_pods.py`. This is done in the file `~/proxy.conf` by adding lines of the form:
@@ -62,8 +62,8 @@
     - You should then be able to ssh into the machine with `ssh arena-<machine_name>`.
 
 4. **Set up for users**:
-- give the participants the ssh private key `cat ~/.ssh/shared_infra_key_name`, get them to save it in `~/.ssh/arena_key_name`.
-- If the participant is on MacOS/Linux, they will additionally need run `chmod 600 ~/.ssh/arena_key_name` to make sure the key is not world readable.
+- give the participants the ssh private key `cat ~/.ssh/shared_infra_key_name`, get them to save it in `~/.ssh/shared_infra_key_name`.
+- If the participant is on MacOS/Linux, they will additionally need run `chmod 600 ~/.ssh/shared_infra_key_name` to make sure the key is not world readable.
 - give the participants the ssh config file `cat ~/.ssh/config` from step 4. They should add the lines to their own `~/.ssh/config` file.
 
 5. **Test the setup**:
