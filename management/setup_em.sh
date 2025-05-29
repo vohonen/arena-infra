@@ -9,7 +9,7 @@ NATO_SUFFIXES=(
   "xray" "yankee" "zulu"
 )
 #
-NATO_SUFFIXES=("tango") # For quick testing
+# NATO_SUFFIXES=("tango") # For quick testing
 
 # --- Configuration ---
 # SSH key to use for connecting to the pods

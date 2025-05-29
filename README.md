@@ -59,17 +59,17 @@
     - You should then be able to ssh into the machine with `ssh arena-<machine_name>`.
 
 4. Setting up users:
-    - give the participants the ssh private key `cat ~/.ssh/shared_infra_key_name`, get them to save it in `~/.ssh/arena_key_name`.
-    - If the participant is on MacOS/Linux, they will additionally need run `chmod 600 ~/.ssh/arena_key_name` to make sure the key is not world readable.
-    - give the participants the ssh config file `cat ~/.ssh/config` from step 4. They should add the lines to their own `~/.ssh/config` file.
+- give the participants the ssh private key `cat ~/.ssh/shared_infra_key_name`, get them to save it in `~/.ssh/arena_key_name`.
+- If the participant is on MacOS/Linux, they will additionally need run `chmod 600 ~/.ssh/arena_key_name` to make sure the key is not world readable.
+- give the participants the ssh config file `cat ~/.ssh/config` from step 4. They should add the lines to their own `~/.ssh/config` file.
 
 5. Test the setup:
-    - ssh into the machine with `ssh arena-<machine_name>`, then run `python3 -c "import torch; print(torch.__version__)"` to make sure the environment is set up correctly.
-    - run `bash ~/management/test_em.sh` to easily check pytorch is installed on all the machines.
+- ssh into the machine with `ssh arena-<machine_name>`, then run `python3 -c "import torch; print(torch.__version__)"` to make sure the environment is set up correctly.
+- run `bash ~/management/test_em.sh` to easily check pytorch is installed on all the machines.
 
 6. (optional) adding details and credentials to the machines:
-    - you can make it so that the users can push to a branch of the arena repo, by automatically deploying the branch to the machine when it is pushed to. This is done by adding a deploy key to the repo, and copying the ssh key to the machines, most easily done with the script `python3 ./management/setup_em.py`.
-    - You can also automatically push all changes, by running `python3 ./management/sync_git.sh`
+- you can make it so that the users can push to a branch of the arena repo, by automatically deploying the branch to the machine when it is pushed to. This is done by adding a deploy key to the repo, and copying the ssh key to the machines, most easily done with the script `python3 ./management/setup_em.py`.
+- You can also automatically push all changes, by running `python3 ./management/sync_git.sh`
 
 
 
