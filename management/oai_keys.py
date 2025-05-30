@@ -4,6 +4,9 @@ import subprocess
 import shlex
 import os # For path joining
 
+from mydotenv import load_env
+load_env()
+
 # --- Configuration ---
 # BASE_DIR = os.path.dirname(os.path.abspath(__file__)) # Gets script's directory
 BASE_DIR = "./"

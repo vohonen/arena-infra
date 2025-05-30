@@ -3,13 +3,15 @@ import runpod
 import os
 from datetime import datetime
 
+from mydotenv import load_env
+load_env()
+
 def list_pods():
     # Get API key from environment
     api_key = os.getenv("RUNPOD_API_KEY")
     if not api_key:
         print("Error: RUNPOD_API_KEY environment variable not set")
         return
-
     runpod.api_key = api_key
 
     try:

@@ -5,28 +5,29 @@ import sys
 import time
 import random
 import string
+import json
 
-def create_specific_pods(pods_to_create):
+# load config.env environment variables
+from mydotenv import load_env
+load_env()
+
+def create_specific_pods(
+        pods_to_create: list[str],
+        gpu_type_id: str = "NVIDIA RTX A4000",
+        gpu_count: int = 1,
+        runpod_cloud_type: str = "COMMUNITY",
+        disk_space_in_gb: int = 100,
+        volume_space_in_gb: int = 0,
+        docker_image: str = "nickypro/arena-env:5.2",
+        ports: str = "8888/http,22/tcp",
+        volume_mount_path: str = "/workspace"
+    ):
     """
     Creates specified RunPod pods if they don't already exist.
 
     Args:
         pods_to_create (list): A list of pod names to attempt to create.
     """
-    # Standard configuration for all pods
-    base_config = {
-        "image_name": "nickypro/arena-env:5.2",
-        "volume_in_gb": 20,
-        "container_disk_in_gb": 100,
-        "ports": "8888/http,22/tcp",
-        "volume_mount_path": "/workspace",
-        "gpu_type_id": "NVIDIA RTX A4000",
-        "cloud_type": "COMMUNITY",
-        #"gpu_type_id": "NVIDIA A40",
-        #"cloud_type": "SECURE",
-        "gpu_count": 1,
-    }
-
     # Get API key from environment
     api_key = os.getenv("RUNPOD_API_KEY")
     if not api_key:
@@ -35,7 +36,7 @@ def create_specific_pods(pods_to_create):
 
     runpod.api_key = api_key
 
-    print("Starting pod creation process...")
+    print("Starting pod check process...")
 
     try:
         # --- Check for existing pods ---
@@ -45,53 +46,60 @@ def create_specific_pods(pods_to_create):
         print(f"Found {len(existing_pod_names)} existing pods.")
         # --- End check ---
 
+        # Separate pods into existing and new
+        existing = [p for p in pods_to_create if p in existing_pod_names]
+        to_create = [p for p in pods_to_create if p not in existing_pod_names]
+
+        if existing:
+            print("\nThe following pods already exist:")
+            for pod in existing:
+                print(f"  - {pod}")
+
+        if not to_create:
+            print("\nNo new pods to create.")
+            return
+
+        print("\nThe following pods will be created:")
+        for pod in to_create:
+            print(f"  - {pod}")
+
+        # Ask for confirmation
+        response = input("\nWould you like to proceed with creation? (y/N): ").lower()
+        if response != 'y':
+            print("Aborting pod creation.")
+            return
+
+        print("\nProceeding with pod creation...")
         created_count = 0
-        skipped_count = 0
         error_count = 0
 
-        for pod_name in pods_to_create:
-            # --- Check if pod already exists ---
-            if pod_name in existing_pod_names:
-                print(f"\nSkipping '{pod_name}': Pod with this name already exists.")
-                skipped_count += 1
-                continue
-            # --- End check ---
-
+        for pod_name in to_create:
             try:
                 print(f"\nAttempting to create pod '{pod_name}' with configuration:")
-                print(f"  Image: {base_config['image_name']}")
-                print(f"  GPU Type: {base_config['gpu_type_id']}")
-                print(f"  GPU Count: {base_config['gpu_count']}")
-                # Add other config details if needed for logging
+                print(f"  Image: {docker_image}")
+                print(f"  GPU Type: {gpu_type_id}")
+                print(f"  GPU Count: {gpu_count}")
 
                 # Generate a random Jupyter password (though not used in create_pod)
-                # If you need to set env vars like JUPYTER_PASSWORD,
-                # you'll need to add the 'env' parameter to create_pod
                 jupyter_password = "".join(
                     random.choices(string.ascii_lowercase + string.digits, k=20)
                 )
 
                 print("Making API call to create pod...")
-                # Note: The 'env' parameter can be used to set environment variables
-                # Example: env={"JUPYTER_PASSWORD": jupyter_password}
                 result = runpod.create_pod(
                     name=pod_name,
-                    image_name=base_config["image_name"],
-                    gpu_count=base_config["gpu_count"],
-                    volume_in_gb=base_config["volume_in_gb"],
-                    container_disk_in_gb=base_config["container_disk_in_gb"],
-                    ports=base_config["ports"],
-                    volume_mount_path=base_config["volume_mount_path"],
-                    gpu_type_id=base_config["gpu_type_id"],
-                    cloud_type=base_config["cloud_type"],
-                    # Add env parameter here if needed:
-                    # env={"EXAMPLE_VAR": "value"}
+                    image_name=docker_image,
+                    gpu_count=gpu_count,
+                    volume_in_gb=volume_space_in_gb,
+                    container_disk_in_gb=disk_space_in_gb,
+                    ports=ports,
+                    volume_mount_path=volume_mount_path,
+                    gpu_type_id=gpu_type_id,
+                    cloud_type=runpod_cloud_type,
                 )
 
                 print(f"✓ Successfully initiated creation for '{pod_name}'")
                 print(f"  Pod Info: {result}")
-                # You might want to store/use this password if you configure Jupyter
-                # print(f"  (Generated Jupyter Password: {jupyter_password})")
                 created_count += 1
 
                 # Wait between creations to potentially avoid rate limiting
@@ -100,7 +108,6 @@ def create_specific_pods(pods_to_create):
             except Exception as e:
                 print(f"\nError creating pod '{pod_name}': {str(e)}")
                 error_count += 1
-                # Decide if you want to continue or stop on error
                 continue
 
     except Exception as e:
@@ -118,32 +125,66 @@ def create_specific_pods(pods_to_create):
 
 
 if __name__ == "__main__":
-    pods_to_create = [
-        "arena5-alpha",
-        "arena5-bravo",
-        "arena5-charlie",
-        "arena5-delta",
-        "arena5-echo",
-        "arena5-foxtrot",
-        "arena5-golf",
-        "arena5-hotel",
-        "arena5-india",
-        "arena5-juliett",
-        "arena5-kilo",
-        "arena5-lima",
-        "arena5-mike",
-        "arena5-november",
-        "arena5-oscar",
-        "arena5-papa",
-        "arena5-quebec",
-        "arena5-romeo",
-        "arena5-sierra",
-        "arena5-tango",
-	    "arena5-uniform",
-        "arena5-victor",
-        "arena5-whiskey",
-        "arena5-xray",
-        "arena5-yankee",
-        "arena5-zulu",
-    ]
-    create_specific_pods(pods_to_create)
+    import argparse
+    import ast
+
+    # Set up argument parser
+    parser = argparse.ArgumentParser(description='Create RunPod instances')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-n', '--num-machines', type=int,
+                      help='Number of machines to create from default list')
+    group.add_argument('machine_names', nargs='*', default=[],
+                      help='Specific machine names to create')
+
+    # Add GPU and cloud configuration options
+    parser.add_argument('--gpu-type',
+                      help='GPU type to use (overrides RUNPOD_GPU_TYPE env var)')
+    parser.add_argument('--gpu-count', type=int,
+                      help='Number of GPUs per machine (overrides RUNPOD_NUM_GPUS env var)')
+    parser.add_argument('--cloud-type', choices=['COMMUNITY', 'SECURE'],
+                      help='RunPod cloud type (overrides RUNPOD_CLOUD_TYPE env var)')
+    parser.add_argument('--docker-image', default="nickypro/arena-env:5.2",
+                      help='Docker image to use (overrides RUNPOD_DOCKER_IMAGE env var)')
+    parser.add_argument('--disk-space-in-gb', type=int, default=100,
+                      help='Disk space in GB (overrides RUNPOD_DISK_SPACE_IN_GB env var)')
+    parser.add_argument('--volume-space-in-gb', type=int, default=0,
+                      help='Volume space in GB (overrides RUNPOD_VOLUME_SPACE_IN_GB env var)')
+
+    # Get environment variables with defaults
+    machine_prefix = os.environ["MACHINE_NAME_PREFIX"]
+    machine_name_list = ast.literal_eval(os.environ["MACHINE_NAME_LIST"])
+
+    # Parse arguments
+    args = parser.parse_args()
+
+    # Set configuration, preferring command line arguments over environment variables
+    gpu_type_id = args.gpu_type or os.environ["RUNPOD_GPU_TYPE"]
+    gpu_count = args.gpu_count or int(os.environ["RUNPOD_NUM_GPUS"])
+    runpod_cloud_type = args.cloud_type or os.environ["RUNPOD_CLOUD_TYPE"]
+    docker_image = args.docker_image or os.environ["RUNPOD_DOCKER_IMAGE"]
+    disk_space_in_gb = args.disk_space_in_gb or int(os.environ["RUNPOD_DISK_SPACE_IN_GB"])
+    volume_space_in_gb = args.volume_space_in_gb or int(os.environ["RUNPOD_VOLUME_SPACE_IN_GB"])
+
+    # Determine which machines to create
+    if args.machine_names:
+        machine_name_list = args.machine_names
+    elif args.num_machines:
+        machine_name_list = machine_name_list[:args.num_machines]
+    else:
+        print(f"Using default list with {len(machine_name_list)} machines")
+
+    print(f"Configuration:")
+    print(f"  GPU Type: {gpu_type_id}")
+    print(f"  GPU Count: {gpu_count}")
+    print(f"  Cloud Type: {runpod_cloud_type}")
+
+    pods_to_create = [f"{machine_prefix}-{name}" for name in machine_name_list]
+    create_specific_pods(
+        pods_to_create,
+        gpu_type_id,
+        gpu_count,
+        runpod_cloud_type,
+        disk_space_in_gb,
+        volume_space_in_gb,
+        docker_image,
+    )

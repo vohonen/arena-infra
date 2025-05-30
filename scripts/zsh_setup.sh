@@ -6,7 +6,9 @@ conda init zsh
 
 # Clone dotfiles repository
 cd ~
-git clone https://github.com/nickypro/.arena_dotfiles.git ~/.arena_dotfiles
+if [ ! -d "~/.arena_infra/dotfiles" ]; then
+  git clone https://github.com/nickypro/arena-infra ~/.arena_infra
+fi
 
 # Install Oh My Zsh
 CHSH=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
@@ -17,11 +19,11 @@ git clone https://github.com/zsh-users/zsh-autosuggestions.git ${ZSH_CUSTOM:-~/.
 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search
 git clone https://github.com/zsh-users/zsh-completions ${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions
-  
+
 # Create symbolic links
-ln -sf ~/.arena_dotfiles/.zshrc ~/.zshrc
-ln -sf ~/.arena_dotfiles/.vimrc ~/.vimrc
-ln -sf ~/.arena_dotfiles/.p10k.zsh ~/.p10k.zsh
+ln -sf ~/.arena_infra/dotfiles/.zshrc ~/.zshrc
+ln -sf ~/.arena_infra/dotfiles/.vimrc ~/.vimrc
+ln -sf ~/.arena_infra/dotfiles/.p10k.zsh ~/.p10k.zsh
 
 # Load machine name if present
 MACHINE_NAME="root"
@@ -30,7 +32,7 @@ if [[ -r ~/.name ]]; then
 fi
 
 # Update Login MOTD
-bash ~/.arena_dotfiles/scripts/motd.sh
+bash ~/.arena_infra/scripts/motd.sh
 
 # make zsh default
 chsh -s "$(which zsh)" root

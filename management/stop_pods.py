@@ -4,10 +4,7 @@ import os
 import sys
 import time
 
-exclude_list = []
-include_list = ["arena5-foxtrot"]
-
-def stop_all_pods():
+def stop_all_pods(include_list, exclude_list):
     # Get API key from environment
     api_key = os.getenv("RUNPOD_API_KEY")
     if not api_key:
@@ -77,4 +74,10 @@ def stop_all_pods():
         sys.exit(1)
 
 if __name__ == "__main__":
-    stop_all_pods()
+    import argparse
+    parser = argparse.ArgumentParser(description='Stop RunPod instances')
+    parser.add_argument('--include', nargs='+', help='Include specific pods by name')
+    parser.add_argument('--exclude', nargs='+', help='Exclude specific pods by name')
+    args = parser.parse_args()
+
+    stop_all_pods(args.include, args.exclude)

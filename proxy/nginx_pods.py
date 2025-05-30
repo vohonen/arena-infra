@@ -2,17 +2,21 @@
 import json
 import os
 import sys
+import ast
 import urllib.request
 import urllib.error
 import urllib.parse
 from datetime import datetime
+
+from mydotenv import load_env
+load_env()
 
 def make_graphql_request(query, api_key):
     """Make a GraphQL request to RunPod API"""
     # URL encode the API key to handle special characters
     encoded_api_key = urllib.parse.quote(api_key, safe='')
     url = f"https://api.runpod.io/graphql?api_key={encoded_api_key}"
-    
+
     data = json.dumps({"query": query}).encode('utf-8')
     headers = {
         'Content-Type': 'application/json',
@@ -23,9 +27,9 @@ def make_graphql_request(query, api_key):
         'Cache-Control': 'no-cache',
         'Pragma': 'no-cache'
     }
-    
+
     request = urllib.request.Request(url, data=data, headers=headers, method='POST')
-    
+
     try:
         with urllib.request.urlopen(request) as response:
             return json.loads(response.read().decode('utf-8'))
@@ -73,13 +77,13 @@ def get_pods(api_key):
         }
     }
     """
-    
+
     result = make_graphql_request(query, api_key)
-    
+
     if 'errors' in result:
         print(f"GraphQL Errors: {result['errors']}")
         return []
-    
+
     return result.get('data', {}).get('myself', {}).get('pods', [])
 
 def list_pods(verbose=False):
@@ -94,7 +98,7 @@ def list_pods(verbose=False):
         if verbose:
             print("Fetching pods...")
         pods = get_pods(api_key)
-        
+
         if not pods:
             if verbose:
                 print("No pods found")
@@ -113,52 +117,49 @@ def list_pods(verbose=False):
         print()
 
         # NATO phonetic alphabet for pod names
-        nato_alphabet = [
-            "alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel",
-            "india", "juliett", "kilo", "lima", "mike", "november", "oscar", "papa",
-            "quebec", "romeo", "sierra", "tango", "uniform", "victor", "whiskey",
-            "xray", "yankee", "zulu",
-            "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero"
-        ]
-
+        machine_name_prefix: str = os.getenv("MACHINE_NAME_PREFIX")
+        machine_name_list: list[str] = ast.literal_eval(os.getenv("MACHINE_NAME_LIST"))
+        proxy_starting_port: int = int(os.getenv("SSH_PROXY_STARTING_PORT"))
+        # print(f"{machine_name_list=}", len(machine_name_list))
         # Map for storing found pods
         found_pods = {}
 
         # Find pods that match the NATO naming pattern
         for pod in pods:
             pod_name = pod.get('name', '')
-            for i, nato in enumerate(nato_alphabet):
-                if pod_name == f"arena5-{nato}":
+            for i, machine_name in enumerate(machine_name_list):
+                pod_name_to_check = f"{machine_name_prefix}-{machine_name}"
+                if pod_name == pod_name_to_check:
                     try:
                         # Get runtime ports
                         runtime = pod.get('runtime', {})
                         ports = runtime.get('ports', [])
-                        
+
                         # Find SSH port and IP
                         ssh_port = None
                         public_ip = None
-                        
+
                         for port in ports:
                             if port.get('type') == 'tcp' and port.get('isIpPublic'):
                                 ssh_port = str(port.get('publicPort'))
                                 public_ip = port.get('ip')
                                 break
-                        
+
                         if public_ip and ssh_port:
-                            found_pods[nato] = {
+                            found_pods[machine_name] = {
                                 "ip": public_ip,
                                 "port": ssh_port,
-                                "listen_port": 12000 + i  # 12000 + index for consistent port numbering
+                                "listen_port": proxy_starting_port + i  # 12000 + index for consistent port numbering
                             }
                     except Exception as e:
                         if verbose:
                             print(f"Error processing pod {pod_name}: {e}")
 
         # Generate Nginx configuration for found pods
-        for nato in sorted(found_pods.keys(), key=lambda x: nato_alphabet.index(x)):
-            data = found_pods[nato]
-            print(f"upstream {nato} {{ server {data['ip']}:{data['port']}; }}")
-            print(f"server {{ listen {data['listen_port']}; proxy_pass {nato}; }}")
+        for machine_name in sorted(found_pods.keys(), key=lambda x: machine_name_list.index(x)):
+            data = found_pods[machine_name]
+            print(f"upstream {machine_name} {{ server {data['ip']}:{data['port']}; }}")
+            print(f"server {{ listen {data['listen_port']}; proxy_pass {machine_name}; }}")
             print()
 
         # Print table if verbose mode (after nginx config)
@@ -172,16 +173,16 @@ def list_pods(verbose=False):
                     # Get SSH port and IP
                     runtime = pod.get('runtime', {})
                     ports = runtime.get('ports', [])
-                    
+
                     ssh_port = 'N/A'
                     public_ip = 'N/A'
-                    
+
                     for port in ports:
                         if port.get('type') == 'tcp' and port.get('isIpPublic'):
                             ssh_port = str(port.get('publicPort', 'N/A'))
                             public_ip = port.get('ip', 'N/A')
                             break
-                    
+
                     # Format the status time (remove year)
                     status_time = pod.get('lastStatusChange', '')
                     if ': ' in status_time:
@@ -197,29 +198,29 @@ def list_pods(verbose=False):
                                 status_time = date_time
                         else:
                             status_time = date_time
-                    
+
                     # Get the status
                     status = pod.get('lastStatusChange', '')
                     if ': ' in status:
                         status = status.split(': ')[0]
-                    
+
                     # Format cost
                     cost = f"${pod.get('costPerHr', 0)}"
-                    
+
                     # Get GPU count
                     gpu_count = pod.get('gpuCount', 0)
                     gpu_count_str = f"{gpu_count}x" if gpu_count > 0 else "0"
-                    
+
                     # Get GPU name
                     gpu_name = 'N/A'
                     if pod.get('machine'):
                         gpu_name = pod['machine'].get('gpuDisplayName', 'N/A')
-                    
+
                     # Get image name (truncate if too long)
                     image_name = pod.get('imageName', 'N/A')
                     if len(image_name) > 29:
                         image_name = image_name[:26] + "..."
-                    
+
                     print(f"{public_ip:<16} {ssh_port:<10} {cost:<10} {status_time:<28} {pod.get('name', 'N/A'):<15} {status:<15} {gpu_count_str:<6} {gpu_name:<20} {image_name:<30}")
                 except Exception as e:
                     print(f"Error processing pod: {e}")

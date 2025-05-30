@@ -1,9 +1,10 @@
 #!/bin/bash
 DAY_NAME="w4d2"
 
-# --- Configuration ---
-# Set the SSH key path - update this with your actual key path
-SSH_KEY="$HOME/.ssh/arena5_key"
+# --- Configuration (from ../config.env) ---
+source "$(dirname "$0")/../config.env"
+
+SSH_KEY="$SHARED_SSH_KEY_PATH"
 
 # User for SSH connection
 SSH_USER="root"  # Change this if you use a different user
@@ -29,16 +30,8 @@ SSH_CONNECT_TEST_OPTS=(
 )
 # --- End Configuration ---
 
-# NATO phonetic alphabet array
-NATO=(
-  "alpha" "bravo" "charlie" "delta" "echo" "foxtrot" "golf" "hotel"
-  "india" "juliett" "kilo" "lima" "mike" "november" "oscar" "papa"
-  "quebec" "romeo" "sierra" "tango" "uniform" "victor" "whiskey"
-  "xray" "yankee" "zulu"
-)
-
 # Temporary directory for logs
-TMP_LOG_DIR="./tmp_git_sync_logs"
+TMP_LOG_DIR="./logs/tmp_git_sync_logs"
 mkdir -p "$TMP_LOG_DIR"
 
 # Function to process a single host
@@ -112,10 +105,10 @@ echo '--- Git operations completed successfully ---'"
 # --- Main Execution Logic ---
 pids=()
 
-echo "Launching Git sync process for ${#NATO[@]} hosts (Max parallel: $MAX_PARALLEL)..."
+echo "Launching Git sync process for ${#MACHINE_NAME_LIST[@]} hosts (Max parallel: $MAX_PARALLEL)..."
 
 # Process hosts in parallel, redirecting output
-for name in "${NATO[@]}"; do
+for name in "${MACHINE_NAME_LIST[@]}"; do
   log_file="$TMP_LOG_DIR/log_$name.log"
 
   if [ ${#pids[@]} -ge $MAX_PARALLEL ]; then
@@ -143,8 +136,8 @@ successful_hosts=()
 conn_failed_hosts=()
 git_failed_hosts=()
 
-for name in "${NATO[@]}"; do
-  host="arena5-$name"
+for name in "${MACHINE_NAME_LIST[@]}"; do
+  host="${MACHINE_NAME_PREFIX}-$name"
   log_file="$TMP_LOG_DIR/log_$name.log"
   if [ -f "$log_file" ]; then
     # Print the captured output for this host
@@ -174,7 +167,7 @@ done
 
 # --- Final Summary ---
 echo "--- Summary ---"
-echo "Total hosts processed: ${#NATO[@]}"
+echo "Total hosts processed: ${#MACHINE_NAME_LIST[@]}"
 echo
 echo "[ OK ] Successful Hosts (${#successful_hosts[@]}):"
 if [ ${#successful_hosts[@]} -gt 0 ]; then printf "  %s\n" "${successful_hosts[@]}"; else echo "  None"; fi

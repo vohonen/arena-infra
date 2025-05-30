@@ -1,17 +1,8 @@
 #!/bin/bash
 
 # --- Configuration ---
-# Set the SSH key path - update this with your actual key path
-SSH_KEY="$HOME/.ssh/arena5_key"
-
-# User for SSH connection
-SSH_USER="root"  # Change this if you use a different user
-
-# Max number of parallel processes
-MAX_PARALLEL=10
-
-# Conda environment name to activate/use
-CONDA_ENV_NAME="arena-env"
+# Load config.env from parent directory
+source "$(dirname "$0")/../config.env"
 
 # The Python code to run
 PYTHON_CODE='import torch; print(f"Torch version: {torch.__version__}, Tensor: {torch.tensor([0.1])}")'
@@ -36,12 +27,12 @@ SSH_CONNECT_TEST_OPTS=(
 # --- End Configuration ---
 
 # NATO phonetic alphabet array
-NATO=(
-  "alpha" "bravo" "charlie" "delta" "echo" "foxtrot" "golf" "hotel"
-  "india" "juliett" "kilo" "lima" "mike" "november" "oscar" "papa"
-  "quebec" "romeo" "sierra" "tango" "uniform" "victor" "whiskey"
-  "xray" "yankee" "zulu"
-)
+# MACHINE_NAME_LIST=(
+#   "alpha" "bravo" "charlie" "delta" "echo" "foxtrot" "golf" "hotel"
+#   "india" "juliett" "kilo" "lima" "mike" "november" "oscar" "papa"
+#   "quebec" "romeo" "sierra" "tango" "uniform" "victor" "whiskey"
+#   "xray" "yankee" "zulu"
+# )
 
 # Temporary directory for logs
 TMP_LOG_DIR="./logs/tmp_torch_check_logs"
@@ -51,13 +42,13 @@ mkdir -p "$TMP_LOG_DIR"
 # This function's output will be redirected to a file
 process_host() {
   local nato_name="$1"
-  local host="arena5-$nato_name"
+  local host="$MACHINE_NAME_PREFIX-$nato_name"
   local status_code=0 # 0=OK, 1=ConnectionFail, 2=CommandFail
 
   echo "--- Processing $host ---"
 
   # --- Connection Test ---
-  if ! ssh "${SSH_CONNECT_TEST_OPTS[@]}" "$SSH_USER@$host" exit; then
+  if ! ssh "${SSH_CONNECT_TEST_OPTS[@]}" "$host" exit; then
     echo "[FAIL] Connection failed or timed out."
     status_code=1
   else
@@ -65,7 +56,7 @@ process_host() {
     local output
     local ssh_status
     # Use the full path to conda, pass the python code in single quotes
-    output=$(ssh "${SSH_OPTS[@]}" "$SSH_USER@$host" \
+    output=$(ssh "${SSH_OPTS[@]}" "$host" \
       "/opt/conda/bin/conda run --no-capture-output -n \"$CONDA_ENV_NAME\" python3 -c '$PYTHON_CODE'" 2>&1)
     ssh_status=$?
 
@@ -91,12 +82,12 @@ process_host() {
 pids=()
 host_status=() # Array to store final status (OK, CONN_FAIL, CMD_FAIL)
 
-echo "Launching checks for ${#NATO[@]} hosts (Max parallel: $MAX_PARALLEL)..."
+echo "Launching checks for ${#MACHINE_NAME_LIST[@]} hosts (Max parallel: $MAX_PARALLEL)..."
 
 # Process hosts in parallel, redirecting output
-for i in "${!NATO[@]}"; do
-  name="${NATO[$i]}"
-  host="arena5-$name"
+for i in "${!MACHINE_NAME_LIST[@]}"; do
+  name="${MACHINE_NAME_LIST[$i]}"
+  host="$MACHINE_NAME_PREFIX-$name"
   log_file="$TMP_LOG_DIR/log_$name.log"
 
   if [ ${#pids[@]} -ge $MAX_PARALLEL ]; then
@@ -132,8 +123,8 @@ successful_hosts=()
 connection_failed_hosts=()
 command_failed_hosts=()
 
-for name in "${NATO[@]}"; do
-  host="arena5-$name"
+for name in "${MACHINE_NAME_LIST[@]}"; do
+  host="$MACHINE_NAME_PREFIX-$name"
   log_file="$TMP_LOG_DIR/log_$name.log"
   if [ -f "$log_file" ]; then
     # Print the captured output for this host
@@ -159,7 +150,7 @@ done
 
 # --- Final Summary ---
 echo "--- Summary ---"
-echo "Total hosts processed: ${#NATO[@]}"
+echo "Total hosts processed: ${#MACHINE_NAME_LIST[@]}"
 echo
 echo "[ OK ] Successful Hosts (${#successful_hosts[@]}):"
 if [ ${#successful_hosts[@]} -gt 0 ]; then printf "  %s\n" "${successful_hosts[@]}"; else echo "  None"; fi

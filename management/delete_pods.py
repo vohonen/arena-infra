@@ -4,10 +4,10 @@ import os
 import sys
 import time
 
-# List of pod names to exclude from deletion
-exclude_list = []
+from mydotenv import load_env
+load_env()
 
-def delete_stopped_pods():
+def delete_stopped_pods(include_list, exclude_list):
     """
     Finds all stopped RunPod pods (excluding those in exclude_list)
     and prompts the user for confirmation before deleting them.
@@ -93,5 +93,12 @@ def delete_stopped_pods():
         sys.exit(1)
 
 if __name__ == "__main__":
-    delete_stopped_pods()
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Delete RunPod instances')
+    parser.add_argument('--include', nargs='+', help='Include specific pods by name')
+    parser.add_argument('--exclude', nargs='+', help='Exclude specific pods by name')
+    args = parser.parse_args()
+
+    delete_stopped_pods(args.include, args.exclude)
 

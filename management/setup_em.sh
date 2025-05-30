@@ -1,31 +1,21 @@
 #!/bin/bash
 
-# NATO phonetic alphabet array for pod naming
-# Comment out or reduce for testing
-NATO_SUFFIXES=(
-  "alpha" "bravo" "charlie" "delta" "echo" "foxtrot" "golf" "hotel"
-  "india" "juliett" "kilo" "lima" "mike" "november" "oscar" "papa"
-  "quebec" "romeo" "sierra" "tango" "uniform" "victor" "whiskey"
-  "xray" "yankee" "zulu"
-)
-#
-# NATO_SUFFIXES=("tango") # For quick testing
+# Load config.env from parent directory
+source "$(dirname "$0")/../config.env"
 
 # --- Configuration ---
 # SSH key to use for connecting to the pods
-SSH_KEY_PATH="$HOME/.ssh/arena5_key"
+SSH_KEY_PATH=SHARED_SSH_KEY_PATH
 # Local path to the private SSH key that will be copied TO the pods for Git operations
-GIT_SSH_KEY_LOCAL="./keys/arena5_key" # IMPORTANT: This key should ONLY be for this purpose
+GIT_SSH_KEY_LOCAL=SHARED_SSH_KEY_PATH
 
 # User for SSH connection (should be 'root' as per your Docker setup)
 SSH_USER="root"
 # Remote path where the GIT_SSH_KEY_LOCAL will be copied on the pod
-GIT_SSH_KEY_REMOTE="/root/.ssh/id_rsa" # Standard location for default SSH key
+GIT_SSH_KEY_REMOTE=${SHARED_SSH_KEY_PATH:="/root/.ssh/id_ed25519"}
 
 # ARENA Repository details (ensure this matches what was cloned in Docker)
 # If you used ARENA_REPO_ARG in Docker build, adjust this accordingly.
-ARENA_REPO_OWNER="styme3279"
-ARENA_REPO_NAME="ARENA_3.0"
 ARENA_REMOTE_SSH_URL="git@github.com:${ARENA_REPO_OWNER}/${ARENA_REPO_NAME}.git"
 ARENA_REPO_PATH="/root/${ARENA_REPO_NAME}" # Path where the repo is cloned in the Docker image
 DEFAULT_BRANCH="main" # Or "master", or use `git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'`
@@ -41,8 +31,8 @@ mkdir -p ./logs
 
 # Function to process a single host
 process_host() {
-  local nato_suffix="$1"
-  local pod_hostname="arena5-${nato_suffix}" # Assuming this is how your pods are named/accessible
+  local machine_name="$1"
+  local pod_hostname="${MACHINE_NAME_PREFIX}-${machine_name}" # Assuming this is how your pods are named/accessible
   local logfile="./logs/init-${pod_hostname}.log"
 
   echo "--- Starting setup for ${pod_hostname} ---" > "$logfile"
@@ -147,8 +137,8 @@ fi
 
 
 active_pids=()
-for suffix_name in "${NATO_SUFFIXES[@]}"; do
-  process_host "$suffix_name" &
+for machine_name_suffix in "${MACHINE_NAME_LIST[@]}"; do
+  process_host "$machine_name_suffix" &
   active_pids+=($!)
 
   # Limit parallel processes
@@ -172,7 +162,7 @@ echo "All pod setup processes finished."
 
 # Optional: Combine all logs into one file
 echo "Combining logs..."
-cat ./logs/init-arena5-*.log > ./logs/init-all-pods.log 2>/dev/null
+cat ./logs/init-${MACHINE_NAME_PREFIX}-*.log > ./logs/init-all-pods.log 2>/dev/null
 echo "Combined log saved to ./logs/init-all-pods.log"
 
 echo "--- All Pods Processed ---"
