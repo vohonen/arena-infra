@@ -126,6 +126,7 @@ Host arena-<machine_name>
 ### 6. **(optional) Streamlining the ssh config**
 - One issue is that if you ever want to turn off a machine, or you want to change out one of the machines, you need to manually update the ssh config by giving this to each participant. This is a pain.
 - set up an ubuntu proxy machine with many ports available. I use [hetzner](https://link.nicky.pro/hetzner), but you can use whatever you want.
+- Note: you should should **use a different ssh key** than the one that is shared with the participants. (you can use an existing key you have for yourself, or create a new one with `ssh-keygen -t ed25519 -N "" -C "proxy_key_name" -f ~/.ssh/proxy_key_name`, and use the public key `cat ~/.ssh/proxy_key_name.pub` for the proxy machine.)
 - Update the config.env, `SSH_PROXY_HOST` should be the ip address or domain name of the proxy machine. (optionally update `SSH_PROXY_NGINX_CONFIG_PATH` and `SSH_PROXY_STARTING_PORT` if you want to run multiple instances of the proxy on the same machine.)
 - clone this repo on the proxy machine:
 ```git clone https://github.com/nickypro/arena-infra.git && cd arena-infra```
