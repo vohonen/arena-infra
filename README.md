@@ -34,30 +34,35 @@ The template is set to automatically clone the latest version of the ARENA 3.0 r
 <details>
 <summary>Why is a single key shared between all participants? Can I make a more secure setup?</summary>
 
-As we don't keep sensitive data on the machines, and our participants have been heavily selected, the flexibility and ease of being able to move machines if there are issues and not needing cusomised workflows for assigning people to pairs outweigh the slightly less secure setup and potential ability for participants to "abuse" the setup.
+As we don't keep sensitive data on the machines, and we mostly trust our participants, the flexibility and ease of being able to move machines if there are issues and not needing cusomised workflows for assigning people to pairs outweighs the slightly less secure setup and potential ability for participants to "abuse" the setup.
 
-It would be possible and more secure to have a different key for each participant, but this would make it more difficult to manage and would require a more complex setup. If this is something that you need, feel free to contact [Nicky](https://nicky.pro/), I can see what I can do for you.
+It would be possible and more secure to have a different key for each participant, but this would increase the complexity of the setup and make it more difficult to manage. If this is usecase that you need, feel free to contact [Nicky](https://nicky.pro/), I can see what I can do for you.
 
 </details>
 
 
 3. **Add details to Config**
-- open config.env and add the details for:
-- `RUNPOD_API_KEY`, the api key for runpod.
+- open `config.env` and add the details for:
+- `RUNPOD_API_KEY`, the api key for runpod. (it would be better to add this specific one to your `~/.zshrc` or `~/.bashrc` file instead of the config.env file so that you can save this config file to github without exposing your api key, but if you don't feel comfortable with that, you can leave it in the config.env file.)
 - `SHARED_SSH_KEY_PATH`, the path to the ssh key you created in step 2.
 - (optional) `MACHINE_NAME_PREFIX`, the prefix for the machine names for your program (e.g: `arena`).
 - (optional) modify any settings like `RUNPOD_GPU_TYPE` or `RUNPOD_TEMPLATE_ID` as desired.
 - (optional) modify `ARENA_REPO_OWNER` to the owner of the arena repo you want to use. You can use the default values for this, but if you want to be easily able to sync and save changes, you can change these to your own github fork of this repo.
-- (optional) if you are planning to use many machines (>40), you will need to add more name options to the `MACHINE_NAME_LIST` variable in the config.
+- (optional) if you are planning to use many machines (>50), you will need to add more name options to the `MACHINE_NAME_LIST` variable in the config.
 
 4. **Run the setup script to set up the machines**
 - To create however many machines you need, run `python3 ./management/create_new_pods.py`. It will ask for input before creating each machine.
 ```python3 ./management/create_new_pods.py```
-- (manual option) run `python3 ./management/ssh_config_manual.py` to print out the ssh config for the machines you have created. (this should give `~/.ssh/config` for the machines you have created). Save this file to your local machine.
+
+Now we can try connecting to the machines to make sure they are working correctly.
+- (manual option) run `python3 ./management/ssh_config_manual.py` to print out the ssh config for the machines you have created. (this should give `~/.ssh/config` for the machines you have created). Save this file to your local machine. You can automatically append it to your existing config with:
 ```python3 ./management/ssh_config_manual.py >> ~/.ssh/config```
+- You can see all the machines you have created and their current status with `python3 ./management/list_pods.py`.
 - test one of the machines by trying to ssh into them with `ssh arena-<machine_name>`.
 - Test all of the machines by running `test_em.sh`:
 ```bash ~/management/test_em.sh```
+- try that you can connect to the machine using `Remote-SSH: Connect to Host...` in VSCode.
+
 
 <details>
 <summary>I don't want to use runpod, or I don't want to run a script to set up the machines. Can I do it manually?</summary>
@@ -76,6 +81,35 @@ Yes, you can do it manually.
     - You can then ssh into the machine using command given by VAST.
 
 <details>
+
+<details>
+<summary>How do I get the `~/.ssh/config` if I am not using runpod?</summary>
+
+You will need to manually add the following to your `~/.ssh/config` file, formatted like this. You will need to:
+- replace `arena-` with `$MACHINE_NAME_PREFIX-` if you changed it
+- replace `shared_infra_key_name` with the name of the key you created in step 2
+
+and for each machine you created:
+- replace `<machine_name>` with the name of the machine you created
+- replace `<machine_ip>` with the ip address of the machine you created
+- replace `<port>` with the port of the machine you created
+
+```
+Host arena-*
+    User root
+    IdentityFile ~/.ssh/shared_infra_key_name
+    UserKnownHostsFile=/dev/null
+    StrictHostKeyChecking=no
+
+Host arena-<machine_name>
+    HostName <machine_ip>
+    Port <port>
+Host arena-<machine_name>
+    HostName <machine_ip>
+    Port <port>
+```
+
+</details>
 
 5. **Share the machines with the participants**
 - give the participants the ssh private key `cat ~/.ssh/shared_infra_key_name`, get them to save it in `~/.ssh/shared_infra_key_name`. (If they are on MacOS/Linux, they will additionally need run `chmod 600 ~/.ssh/shared_infra_key_name` to make sure the key is not world readable.)
@@ -96,72 +130,51 @@ Yes, you can do it manually.
 - You will also need to then restart nginx: `bash ~/update.sh` (or `sudo systemctl restart nginx`). Note that if there is an error in your config (eg: missing semicolon), nginx will not start. `nginx_pods.py` should directly give a working config, but if things fail, the best way to debug this is to run `journalctl -fu nginx` to see the error.
 - On your local machine again now, you can generate the new ssh config file with `python3 ./management/ssh_config_proxy.py`. Now whenever you want to restart or change one of the machines, you only need to update the proxy config file and restart nginx on the proxy machine, no need to update the ssh config for all the participants.
 
+<details>
+<summary>How do I get the `~/proxy.conf` if I am not using runpod?</summary>
 
-## Detailed steps.
-1. **Generate a ssh key**: `ssh-keygen -t ed25519 -N "" -C "shared_infra_key_name" -f ~/.ssh/shared_infra_key_name`, (change `shared_infra_key_name` to something meaningful for your program.
+You will need to manually add the following to your `~/proxy.conf` file, formatted like this, for each machine you created. You will need to:
+- replace `<machine_name>` with the name of the machine you created
+- replace `<machine_ip>` with the ip address of the machine you created
+- replace `<machine_port>` with the port of the machine you created (generated randomly by runpod/vastai/etc...)
+- replace `<proxy_port>` with the port of the proxy machine you created (should be consistent, eg: 12000, 12001, etc...)
 
-2. **Setting up the machines**: [Setup an account with RunPod](https://link.nicky.pro/runpod) or another GPU provider. You can then either setup each machine manually, or use a script to set them up. We currently mostly use RunPod Community Cloud A4000s for most of the program. You can either:
+```
+upstream <machine_name> { server <machine_ip>:<machine_port>; }
+server { listen <proxy_port>; proxy_pass <machine_name>; }
 
-- b. Set them up automatically using a script (if you have a lot of machines):
-    - Create an API key for RunPod, by going Settings > API Keys > Create API Key with "all" permissions.
-    - Add `export RUNPOD_API_KEY=<your_api_key>` to your `~/.bashrc` or `~/.zshrc` and reload the shell.
-    - Run the script [./management/create_new_pods.py](./management/create_new_pods.py) with `python3 ./management/create_new_pods.py`
-    - You can list all the machines you have created with `python3 ./management/nginx_pods.py`
+```
 
-3. **Connecting to the Machines - Get the SSH config**:
-- a. Manually (must be updated if a new machine is added):
-    - Get the ip address of the machine you set up (either from the RunPod dashboard or by running `python3 ./management/nginx_pods.py`).
-    - set up a ssh config file to forward packets through the proxy machine. This is done in the file `~/.ssh/config` by adding lines of the form:
-    ```
-    Host arena-*
-        User root
-        IdentityFile ~/.ssh/shared_infra_key_name
-        UserKnownHostsFile=/dev/null
-        StrictHostKeyChecking=no
+for example, if you created a machine called `apple`, you would add the following to your `~/proxy.conf` file:
 
-    Host arena-<machine_name>
-        HostName <machine_ip>
-        Port <port>
-    ```
-    - You should then be able to ssh into the machine with `ssh arena-<machine_name>`.
+```
+upstream apple { server 1.2.3.4:2222; }
+server { listen 12000; proxy_pass apple; }
+```
 
-- b. Automatic Forwarding (best if you have a lot of machines):
-    - I reccomend to set up a proxy machine (I use [hetzner](https://link.nicky.pro/hetzner), but you can use whatever you want). **This should NOT use the `shared_infra_key_name` key**, but instead your own ssh key (if you don't already have one, you can generate one with `ssh-keygen -t ed25519 -C "proxy_key_name"`).
-    - You will need to create a machine (I use the `CAX21` VPS template on hetzner with the latest version of ubuntu.)
-    - ssh into the new machine `ssh root@<proxy_machine_ip>`, as described by hetzner or whatever service you use.
-    - Install nginx with stream module and setup a config file to forward packets to the machines. Easiest way to do this is to run this command on the proxy machine:
-    - `git clone https://github.com/nickypro/.arena_dotfiles.git && cd .arena_dotfiles/proxy && sudo bash setup_nginx.sh && cd ~`
-    - Next, you need to add a config that maps each of cloud machines to a port on the proxy machine. If using runpod, this can be generated automatically with `python3 ./management/nginx_pods.py`. This is done in the file `~/proxy.conf` by adding lines of the form:
-    ```
-    upstream <machine_name> { server <machine_ip>:<port>; }
-    server { listen <port>; proxy_pass <machine_name>; }
-    ```
-    - You can add as many of these as you want, just make sure the ports don't conflict. By default we use ports 12000-12099.
-    - You then need an ssh config to share the machines. This is done in the file `~/.ssh/config` by adding lines of the form. This can be generated automatically with `python3 ./management/ssh_config.py`:
-    ```
-    Host arena-*
-        User root
-        HostName <proxy_machine_ip>
-        IdentityFile ~/.ssh/shared_infra_key_name
-        UserKnownHostsFile=/dev/null
-        StrictHostKeyChecking=no
+</details>
 
-    Host arena-alpha
-        Port <proxy_port>
-    ```
-    - You should then be able to ssh into the machine with `ssh arena-<machine_name>`.
-
-4. **Set up for users**:
-- give the participants the ssh private key `cat ~/.ssh/shared_infra_key_name`, get them to save it in `~/.ssh/shared_infra_key_name`.
-- If the participant is on MacOS/Linux, they will additionally need run `chmod 600 ~/.ssh/shared_infra_key_name` to make sure the key is not world readable.
-- give the participants the ssh config file `cat ~/.ssh/config` from step 4. They should add the lines to their own `~/.ssh/config` file.
-
-5. **Test the setup**:
-- ssh into the machine with `ssh arena-<machine_name>`, then run `python3 -c "import torch; print(torch.__version__)"` to make sure the environment is set up correctly.
-- run `bash ~/management/test_em.sh` to easily check pytorch is installed on all the machines.
-- try that you can connect to the machine using `Remote-SSH: Connect to Host...` in VSCode.
-
-6. **(optional) adding details and credentials to the machines**:
-- you can make it so that the users can push to a branch of the arena repo, by automatically deploying the branch to the machine when it is pushed to. This is done by adding a deploy key to the repo, and copying the ssh key to the machines, most easily done with the script `python3 ./management/setup_em.py`.
+7. **(optional) setting up easy git push to branches on the machines**:
+- you can make it so that the users can push to a branch of the arena repo, by automatically deploying the branch to the machine when it is pushed to.
+- To do this, you will need to have your own fork of the arena repo on your account, and to add the public key (`~/.ssh/shared_infra_key_name.pub`) as a deploy key on the repo.
+- You will then need to change the `ARENA_REPO_OWNER` in the config.env file to your github username. Make sure to set it so that the `main` branch has read-only access.
+- You can then copy the ssh key to the machines, and automatically set the repo to be your account's repo with the script `python3 ./management/setup_em.py`.
 - You can also automatically push all changes, by running `python3 ./management/sync_git.sh`
+
+8. **(optional) copying API keys (for evals week3) to the machines**
+- If you are doing evals week3, you will need to copy the API keys to the machines.
+- You will need to manually make an api key on OpenAI and Anthropic, and make two CSV files of the format, saved to `./keys/openai_api_keys.csv` and `./keys/anthropic_api_keys.csv`:
+```
+arena-<machine_name>,sk-...
+arena-apple,sk-...
+arena-autumn,sk-...
+arena-bloom,sk-...
+```
+- You can then copy the keys to the machines with `python3 ./management/copy_api_keys.py`.
+
+---
+
+## Other notes
+
+
 
