@@ -72,7 +72,7 @@ Yes, you can do it manually.
     - Create an instance with desired GPU and reccomended ~100GB of storage.
     - You can then ssh into the machine using command given by VAST.
 
-<details>
+</details>
 
 ii. Connecting to the machines
 Now we can try connecting to the machines to make sure they are working correctly.
