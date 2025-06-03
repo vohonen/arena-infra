@@ -10,14 +10,14 @@ The template is set to automatically clone the latest version of the ARENA 3.0 r
 
 ## Steps for Setting up the infrastructure.
 
-1. **Clone the repo on your local machine.**
+### 1. **Clone the repo on your local machine.**
 - You will need git and python installed on your local machine.
 - Clone this github repo on your local machine:
 ```git clone https://github.com/nickypro/arena-infra.git```
 - install [runpod python api library](https://pypi.org/project/runpod/) on your local machine:
 ```pip install runpod```
 
-2. **Get the keys**
+### 2. **Get the keys**
 - get api key from [runpod](https://link.nicky.pro/runpod)
 - create a shared ssh key (optionally replace `shared_infra_key_name` with something meaningful for your program):
 ```ssh-keygen -t ed25519 -N "" -C "shared_infra_key_name" -f ~/.ssh/shared_infra_key_name```
@@ -42,7 +42,7 @@ It would be possible and more secure to have a different key for each participan
 </details>
 
 
-3. **Add details to Config**
+### 3. **Add details to Config**
 - open `config.env` and add the details for:
 - `RUNPOD_API_KEY`, the api key for runpod. (it would be better to add this specific one to your `~/.zshrc` or `~/.bashrc` file instead of the config.env file so that you can save this config file to github without exposing your api key, but if you don't feel comfortable with that, you can leave it in the config.env file.)
 - `SHARED_SSH_KEY_PATH`, the path to the ssh key you created in step 2.
@@ -51,7 +51,7 @@ It would be possible and more secure to have a different key for each participan
 - (optional) modify `ARENA_REPO_OWNER` to the owner of the arena repo you want to use. You can use the default values for this, but if you want to be easily able to sync and save changes, you can change these to your own github fork of this repo.
 - (optional) if you are planning to use many machines (>50), you will need to add more name options to the `MACHINE_NAME_LIST` variable in the config.
 
-4. **Run the setup script to set up the machines**
+### 4. **Run the setup script to set up the machines**
 i. Creating the machines
 - To create however many runpod pods as you need, run `python3 ./management/create_new_pods.py`. It will ask for input before creating each machine.
 ```python3 ./management/create_new_pods.py```
@@ -74,7 +74,7 @@ Yes, you can do it manually.
 
 </details>
 
-ii. Connecting to the machines
+### ii. Connecting to the machines
 Now we can try connecting to the machines to make sure they are working correctly.
 - (manual option) run `python3 ./management/ssh_config_manual.py` to print out the ssh config for the machines you have created. (this should give `~/.ssh/config` for the machines you have created). Save this file to your local machine. You can automatically append it to your existing config with:
 ```python3 ./management/ssh_config_manual.py >> ~/.ssh/config```
@@ -113,11 +113,11 @@ Host arena-<machine_name>
 
 </details>
 
-5. **Share the machines with the participants**
+### 5. **Share the machines with the participants**
 - give the participants the ssh private key `cat ~/.ssh/shared_infra_key_name`, get them to save it in `~/.ssh/shared_infra_key_name`. (If they are on MacOS/Linux, they will additionally need run `chmod 600 ~/.ssh/shared_infra_key_name` to make sure the key is not world readable.)
 - give the participants the ssh config file `cat ~/.ssh/config` from step 4. They should add the lines to their own `~/.ssh/config` file.
 
-6. **(optional) Streamlining the ssh config**
+### 6. **(optional) Streamlining the ssh config**
 - One issue is that if you ever want to turn off a machine, or you want to change out one of the machines, you need to manually update the ssh config by giving this to each participant. This is a pain.
 - set up an ubuntu proxy machine with many ports available. I use [hetzner](https://link.nicky.pro/hetzner), but you can use whatever you want.
 - Update the config.env, `SSH_PROXY_HOST` should be the ip address or domain name of the proxy machine. (optionally update `SSH_PROXY_NGINX_CONFIG_PATH` and `SSH_PROXY_STARTING_PORT` if you want to run multiple instances of the proxy on the same machine.)
@@ -156,14 +156,14 @@ server { listen 12000; proxy_pass apple; }
 
 </details>
 
-7. **(optional) setting up easy git push to branches on the machines**:
+### 7. **(optional) setting up easy git push to branches on the machines**:
 - you can make it so that the users can push to a branch of the arena repo, by automatically deploying the branch to the machine when it is pushed to.
 - To do this, you will need to have your own fork of the arena repo on your account, and to add the public key (`~/.ssh/shared_infra_key_name.pub`) as a deploy key on the repo.
 - You will then need to change the `ARENA_REPO_OWNER` in the config.env file to your github username. Make sure to set it so that the `main` branch has read-only access.
 - You can then copy the ssh key to the machines, and automatically set the repo to be your account's repo with the script `python3 ./management/setup_em.py`.
 - You can also automatically push all changes, by running `python3 ./management/sync_git.sh`
 
-8. **(optional) copying API keys (for evals week3) to the machines**
+### 8. **(optional) copying API keys (for evals week3) to the machines**
 - If you are doing evals week3, you will need to copy the API keys to the machines.
 - You will need to manually make an api key on OpenAI and Anthropic, and make two CSV files of the format, saved to `./keys/openai_api_keys.csv` and `./keys/anthropic_api_keys.csv`:
 ```
@@ -174,7 +174,7 @@ arena-bloom,sk-...
 ```
 - You can then copy the keys to the machines with `python3 ./management/copy_api_keys.py`.
 
-9. **Stopping/Killing the machines**
+### 9. **Stopping/Killing the machines**
 - If you want to retain the data, make sure to use the script from step 7.
 - You can stop the machines with `./management/stop_pods.py`. Note that be default this will **delete all the data on machines**, so make sure you have saved all the data you need.
 (it is potentially possible to save the data by using volumes, but I have found that often one is left with the volume is connected to a machine with no gpus available when you want to start it again, so in practice this is not useful)
