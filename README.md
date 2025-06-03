@@ -52,9 +52,14 @@ It would be possible and more secure to have a different key for each participan
 - (optional) if you are planning to use many machines (>50), you will need to add more name options to the `MACHINE_NAME_LIST` variable in the config.
 
 ### 4. **Run the setup script to set up the machines**
-i. Creating the machines
-- To create however many runpod pods as you need, run `python3 ./management/create_new_pods.py`. It will ask for input before creating each machine.
-```python3 ./management/create_new_pods.py```
+**i. Creating the machines**
+
+- To create however many runpod pods as you need, run `./management/create_new_pods.py`. It will ask for confirmation before creating the machines, and will only create the difference if you have already created some machines already.
+```python3 ./management/create_new_pods.py -n <total_number_of_pods>```
+
+- You can also create a specific number of new machines by running:
+```python3 ./management/create_new_pods.py --add <additional_number_of_pods>```
+
 
 <details>
 <summary>I don't want to use runpod, or I don't want to run a script to set up the machines. Can I do it manually?</summary>
@@ -74,7 +79,8 @@ Yes, you can do it manually.
 
 </details>
 
-### ii. Connecting to the machines
+**ii. Connecting to the machines**
+
 Now we can try connecting to the machines to make sure they are working correctly.
 - (manual option) run `python3 ./management/ssh_config_manual.py` to print out the ssh config for the machines you have created. (this should give `~/.ssh/config` for the machines you have created). Save this file to your local machine. You can automatically append it to your existing config with:
 ```python3 ./management/ssh_config_manual.py >> ~/.ssh/config```
