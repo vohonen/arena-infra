@@ -10,7 +10,7 @@ def generate_ssh_config(verbose=False):
     # Get API key from environment
     api_key = os.getenv("RUNPOD_API_KEY")
     if not api_key:
-        print("Error: RUNPOD_API_KEY environment variable not set")
+        print("# Error: RUNPOD_API_KEY environment variable not set")
         return
     runpod.api_key = api_key
 
@@ -22,11 +22,11 @@ def generate_ssh_config(verbose=False):
     try:
         # Get all pods
         if verbose:
-            print("Fetching pods...")
+            print("# Fetching pods...")
         pods = runpod.get_pods()
 
         if not pods:
-            print("No pods found")
+            print("# No pods found")
             return
 
         # Sort pods by name
@@ -56,12 +56,12 @@ Host {pod['name']}
     Port {ssh_port}"""
 
             except Exception as e:
-                print(f"Error processing pod {pod.get('name', 'unknown')}: {e}")
+                print(f"# Error processing pod {pod.get('name', 'unknown')}: {e}")
 
         print(ssh_config)
 
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"# Error: {str(e)}")
 
 if __name__ == "__main__":
     import argparse

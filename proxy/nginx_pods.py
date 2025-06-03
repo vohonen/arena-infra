@@ -90,18 +90,18 @@ def list_pods(verbose=False):
     # Get API key from environment
     api_key = os.getenv("RUNPOD_API_KEY")
     if not api_key:
-        print("Error: RUNPOD_API_KEY environment variable not set")
+        print("# Error: RUNPOD_API_KEY environment variable not set")
         return
 
     try:
         # Get all pods
         if verbose:
-            print("Fetching pods...")
+            print("# Fetching pods...")
         pods = get_pods(api_key)
 
         if not pods:
             if verbose:
-                print("No pods found")
+                print("# No pods found")
             return
 
         # Sort pods by name
@@ -153,7 +153,7 @@ def list_pods(verbose=False):
                             }
                     except Exception as e:
                         if verbose:
-                            print(f"Error processing pod {pod_name}: {e}")
+                            print(f"# Error processing pod {pod_name}: {e}")
 
         # Generate Nginx configuration for found pods
         for machine_name in sorted(found_pods.keys(), key=lambda x: machine_name_list.index(x)):
@@ -223,13 +223,13 @@ def list_pods(verbose=False):
 
                     print(f"{public_ip:<16} {ssh_port:<10} {cost:<10} {status_time:<28} {pod.get('name', 'N/A'):<15} {status:<15} {gpu_count_str:<6} {gpu_name:<20} {image_name:<30}")
                 except Exception as e:
-                    print(f"Error processing pod: {e}")
+                    print(f"# Error processing pod: {e}")
                     print(pod)
 
             print("="*140 + "\n")
 
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"# Error: {str(e)}")
 
 if __name__ == "__main__":
     # Check for -v flag

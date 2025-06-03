@@ -96,8 +96,8 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description='Delete RunPod instances')
-    parser.add_argument('--include', nargs='+', help='Include specific pods by name')
-    parser.add_argument('--exclude', nargs='+', help='Exclude specific pods by name')
+    parser.add_argument('--include', nargs='+', help='Include specific pods by name', default=[])
+    parser.add_argument('--exclude', nargs='+', help='Exclude specific pods by name', default=[])
     args = parser.parse_args()
 
     delete_stopped_pods(args.include, args.exclude)
