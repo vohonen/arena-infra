@@ -11,6 +11,7 @@ The template is set to automatically clone the latest version of the ARENA 3.0 r
 ## Steps for Setting up the infrastructure.
 
 1. **Clone the repo on your local machine.**
+- You will need git and python installed on your local machine.
 - Clone this github repo on your local machine:
 ```git clone https://github.com/nickypro/arena-infra.git```
 - install [runpod python api library](https://pypi.org/project/runpod/) on your local machine:
@@ -46,23 +47,14 @@ It would be possible and more secure to have a different key for each participan
 - `RUNPOD_API_KEY`, the api key for runpod. (it would be better to add this specific one to your `~/.zshrc` or `~/.bashrc` file instead of the config.env file so that you can save this config file to github without exposing your api key, but if you don't feel comfortable with that, you can leave it in the config.env file.)
 - `SHARED_SSH_KEY_PATH`, the path to the ssh key you created in step 2.
 - (optional) `MACHINE_NAME_PREFIX`, the prefix for the machine names for your program (e.g: `arena`).
-- (optional) modify any settings like `RUNPOD_GPU_TYPE` or `RUNPOD_TEMPLATE_ID` as desired.
+- (optional) modify any settings like `RUNPOD_GPU_TYPE` and `RUNPOD_CLOUD_TYPE` as desired for different GPUs, or `RUNPOD_NUM_GPUS` to change the number of GPUs per machine.
 - (optional) modify `ARENA_REPO_OWNER` to the owner of the arena repo you want to use. You can use the default values for this, but if you want to be easily able to sync and save changes, you can change these to your own github fork of this repo.
 - (optional) if you are planning to use many machines (>50), you will need to add more name options to the `MACHINE_NAME_LIST` variable in the config.
 
 4. **Run the setup script to set up the machines**
-- To create however many machines you need, run `python3 ./management/create_new_pods.py`. It will ask for input before creating each machine.
+i. Creating the machines
+- To create however many runpod pods as you need, run `python3 ./management/create_new_pods.py`. It will ask for input before creating each machine.
 ```python3 ./management/create_new_pods.py```
-
-Now we can try connecting to the machines to make sure they are working correctly.
-- (manual option) run `python3 ./management/ssh_config_manual.py` to print out the ssh config for the machines you have created. (this should give `~/.ssh/config` for the machines you have created). Save this file to your local machine. You can automatically append it to your existing config with:
-```python3 ./management/ssh_config_manual.py >> ~/.ssh/config```
-- You can see all the machines you have created and their current status with `python3 ./management/list_pods.py`.
-- test one of the machines by trying to ssh into them with `ssh arena-<machine_name>`.
-- Test all of the machines by running `test_em.sh`:
-```bash ~/management/test_em.sh```
-- try that you can connect to the machine using `Remote-SSH: Connect to Host...` in VSCode.
-
 
 <details>
 <summary>I don't want to use runpod, or I don't want to run a script to set up the machines. Can I do it manually?</summary>
@@ -81,6 +73,16 @@ Yes, you can do it manually.
     - You can then ssh into the machine using command given by VAST.
 
 <details>
+
+ii. Connecting to the machines
+Now we can try connecting to the machines to make sure they are working correctly.
+- (manual option) run `python3 ./management/ssh_config_manual.py` to print out the ssh config for the machines you have created. (this should give `~/.ssh/config` for the machines you have created). Save this file to your local machine. You can automatically append it to your existing config with:
+```python3 ./management/ssh_config_manual.py >> ~/.ssh/config```
+- You can see all the machines you have created and their current status with `python3 ./management/list_pods.py`.
+- test one of the machines by trying to ssh into them with `ssh arena-<machine_name>`.
+- Test all of the machines by running `test_em.sh`:
+```bash ~/management/test_em.sh```
+- try that you can connect to the machine using `Remote-SSH: Connect to Host...` in VSCode.
 
 <details>
 <summary>How do I get the `~/.ssh/config` if I am not using runpod?</summary>
@@ -172,9 +174,56 @@ arena-bloom,sk-...
 ```
 - You can then copy the keys to the machines with `python3 ./management/copy_api_keys.py`.
 
+9. **Stopping/Killing the machines**
+- If you want to retain the data, make sure to use the script from step 7.
+- You can stop the machines with `./management/stop_pods.py`. Note that be default this will **delete all the data on machines**, so make sure you have saved all the data you need.
+(it is potentially possible to save the data by using volumes, but I have found that often one is left with the volume is connected to a machine with no gpus available when you want to start it again, so in practice this is not useful)
+- To stop the machines, you can run:
+```
+python3 ./management/stop_pods.py
+```
+It will ask for confirmation, and then it will stop the machines. You can use the `--include <machine_name>` flag to stop a specific machine, or `--exclude <machine_name>` to stop all the machines except for a specific one.
+
+- To finally delete the machines, you can run:
+```
+python3 ./management/delete_pods.py
+```
+It will ask for confirmation, and then it will delete the machines.
+
+
+
 ---
 
 ## Other notes
 
 
+- If you want to know the current status of the machines, you can run `python3 ./management/list_pods.py`.
+- If you want to update the machines, you will need to update either the `~/.ssh/config` for all users (4.ii) if you choose to use the manual ssh config, or the `~/proxy.conf` (6.) if you choose to use the proxy.
 
+## Documentation of all of the scripts
+
+- `create_new_pods.py`: Creates new runpod pods.
+  - command options:
+  - `python3 ./management/create_new_pods.py --help`: Shows the help message.
+  - `python3 ./management/create_new_pods.py -n <total_number_of_pods>`: Creates up to a specified number of pods. If there are already sum number of pods, it will only make the difference.
+  - `python3 ./management/create_new_pods.py -a <additional_number_of_pods>`: Creates additional in addition to the existing number of pods.
+  - `python3 ./management/create_new_pods.py <machine_name_1> <machine_name_2> ...`: Creates a pod with the specified machine names.
+  - `python3 ./management/create_new_pods.py -a 1 --gpu-type "NVIDIA A40" --num-gpus 4 --cloud-type SECURE --docker-image nickypro/arena-env:5.5 --disk-space-in-gb 500`: Creates 1 pod with the specified gpu type, number of gpus per machine, cloud type, docker image, and disk space.
+
+- `ssh_config_manual.py`: Prints out the ssh config for the machines you have created.
+- `ssh_config_proxy.py`: Prints out the ssh config for the machines you have created using the proxy.
+- `list_pods.py`: Lists all of your runpod pods and their current status.
+- `test_em.sh`: Tests the machines by sshing into them and running a few commands.
+- `setup_em.py`: Sets up the machines to use your github fork of the arena repo.
+- `sync_git.sh`: Automatically pushes all changes to the machines.
+- `copy_api_keys.py`: Copies the API keys to the machines.
+- `stop_pods.py`: Stops the machines (if you want to retain the data, make sure to use sync_git.sh first).
+- `delete_pods.py`: Deletes all stopped pods.
+
+
+### scripts to run on the proxy machine.
+- `setup_nginx.sh`: Sets up nginx on the proxy machine.
+- `nginx_pods.py`: Prints out the nginx proxy config for the machines you have created.
+  - This should be added to the `~/proxy.conf` file on the proxy machine.
+- `update.sh`: Restarts nginx on the proxy machine.
+- `journalctl -fu nginx`: Shows the nginx logs, useful for debugging issues with nginx.
