@@ -8,6 +8,8 @@ The runpod template is available here: [https://link.nicky.pro/runpod-arena-env]
 
 The template is set to automatically clone the latest version of the ARENA 3.0 repository and install the dependencies with conda and cuda.
 
+![Diagram comparing manual ssh config VS automatic ssh config](https://raw.githubusercontent.com/nickypro/arena-infra/refs/heads/main/management/arena-infra-diagram.svg)
+
 ## Steps for Setting up the infrastructure.
 
 ### 1. **Clone the repo on your local machine.**
