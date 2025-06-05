@@ -34,11 +34,17 @@ def list_pods():
         # Print each pod's information
         for pod in pods:
             try:
-                # Get the public IP and port for SSH (type 'tcp')
-                ssh_port = next((str(p['publicPort']) for p in pod['runtime']['ports']
-                               if p['type'] == 'tcp' and p['isIpPublic']), 'N/A')
-                public_ip = next((p['ip'] for p in pod['runtime']['ports']
-                                if p['type'] == 'tcp' and p['isIpPublic']), 'N/A')
+                # Check if runtime exists (pod is running)
+                if pod.get('runtime') and pod['runtime']:
+                    # Get the public IP and port for SSH (type 'tcp')
+                    ssh_port = next((str(p['publicPort']) for p in pod['runtime']['ports']
+                                   if p['type'] == 'tcp' and p['isIpPublic']), 'N/A')
+                    public_ip = next((p['ip'] for p in pod['runtime']['ports']
+                                    if p['type'] == 'tcp' and p['isIpPublic']), 'N/A')
+                else:
+                    # Pod is not running yet
+                    ssh_port = 'Pending'
+                    public_ip = 'Pending'
 
                 # Format the status time
                 status_time = pod['lastStatusChange']
@@ -52,8 +58,10 @@ def list_pods():
                 cost = f"${pod['costPerHr']}"
 
                 print(f"{public_ip:<16} {ssh_port:<10} {cost:<10} {status_time} {pod['name']:<15} {status:<12} {pod['machine']['gpuDisplayName']:<8}")
-            except:
-                print(pod)
+            except Exception as e:
+                # Fallback for any unexpected errors - still show basic info
+                print(f"{'Error':<16} {'Error':<10} {f'${pod.get(\"costPerHr\", \"N/A\")}'):<10} {'N/A'} {pod.get('name', 'Unknown'):<15} {'Error':<12} {pod.get('machine', {}).get('gpuDisplayName', 'N/A'):<8}")
+                print(f"  Debug: {str(e)}")
 
         print("="*120 + "\n")
 

@@ -129,13 +129,22 @@ Host arena-<machine_name>
 - One issue is that if you ever want to turn off a machine, or you want to change out one of the machines, you need to manually update the ssh config by giving this to each participant. This is a pain.
 - set up an ubuntu proxy machine with many ports available. I use [hetzner](https://link.nicky.pro/hetzner), but you can use whatever you want.
 - Note: you should should **use a different ssh key** than the one that is shared with the participants. (you can use an existing key you have for yourself, or create a new one with `ssh-keygen -t ed25519 -N "" -C "proxy_key_name" -f ~/.ssh/proxy_key_name`, and use the public key `cat ~/.ssh/proxy_key_name.pub` for the proxy machine.)
+- add this proxy machine to your ~/.ssh/config
+```
+Host myproxy
+    User root
+    HostName <hetzner_machine_ip>
+    IdentityFile ~/.ssh/proxy_key_name
+    UserKnownHostsFile=/dev/null
+    StrictHostKeyChecking=no
+```
 - Update the config.env, `SSH_PROXY_HOST` should be the ip address or domain name of the proxy machine. (optionally update `SSH_PROXY_NGINX_CONFIG_PATH` and `SSH_PROXY_STARTING_PORT` if you want to run multiple instances of the proxy on the same machine.)
 - clone this repo on the proxy machine:
 ```git clone https://github.com/nickypro/arena-infra.git && cd arena-infra```
 - copy the config.env file to the proxy machine:
-```scp config.env root@<proxy_machine_ip>:/home/ubuntu/arena-infra/config.env```
-- setup nginx on the proxy machine: `sudo bash ./management/setup_nginx.sh`.
-- on the proxy machine, run `python3 ./management/nginx_pods.py` to print out the nginx proxy config for the machines you have created. (this should give `~/proxy.conf` for the machines you have created). Add this to `~/proxy.conf` on the proxy machine. You can do this automatically with:
+```scp config.env myproxy:~/arena-infra/config.env```
+- setup nginx on the proxy machine: `sudo bash ./proxy/setup_nginx.sh`.
+- on the proxy machine, run `python3 ./proxy/nginx_pods.py` to print out the nginx proxy config for the machines you have created. (this should give `~/proxy.conf` for the machines you have created). Add this to `~/proxy.conf` on the proxy machine. You can do this automatically with:
 ```python3 ./management/nginx_pods.py > ~/proxy.conf```
 
 - You will also need to then restart nginx: `bash ~/update.sh` (or `sudo systemctl restart nginx`). Note that if there is an error in your config (eg: missing semicolon), nginx will not start. `nginx_pods.py` should directly give a working config, but if things fail, the best way to debug this is to run `journalctl -fu nginx` to see the error.
