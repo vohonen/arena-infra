@@ -17,7 +17,7 @@ def generate_ssh_config(verbose=False):
     # Get SSH configuration from environment
     machine_name_prefix: str = os.getenv("MACHINE_NAME_PREFIX")
     ssh_user: str = os.getenv("SSH_USER")
-    ssh_key_path: str = os.getenv("SSH_KEY_PATH")
+    ssh_key_path: str = os.getenv("SHARED_SSH_KEY_PATH")
 
     try:
         # Get all pods
