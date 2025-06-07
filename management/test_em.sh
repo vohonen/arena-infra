@@ -13,7 +13,7 @@ SSH_OPTS=(
   -o StrictHostKeyChecking=no # Don't ask about host keys
   -o UserKnownHostsFile=/dev/null # Don't store host keys
   -o LogLevel=ERROR         # Suppress warnings like adding host keys
-  -i "$SSH_KEY"             # Use the specified key
+  -i "$SHARED_SSH_KEY_PATH"             # Use the specified key
 )
 SSH_CONNECT_TEST_OPTS=(
   -q                        # Quiet mode for connection test
@@ -22,7 +22,7 @@ SSH_CONNECT_TEST_OPTS=(
   -o StrictHostKeyChecking=no
   -o UserKnownHostsFile=/dev/null
   -o LogLevel=ERROR
-  -i "$SSH_KEY"
+  -i "$SHARED_SSH_KEY_PATH"
 )
 # --- End Configuration ---
 
