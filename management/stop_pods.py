@@ -4,6 +4,9 @@ import os
 import sys
 import time
 
+from mydotenv import load_env
+load_env()
+
 def stop_all_pods(include_list, exclude_list):
     # Get API key from environment
     api_key = os.getenv("RUNPOD_API_KEY")
