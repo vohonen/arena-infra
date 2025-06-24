@@ -209,6 +209,80 @@ python3 ./management/delete_pods.py
 ```
 It will ask for confirmation, and then it will delete the machines.
 
+### 10. **(optional) Scheduling VM Creation and Shutdown**
+
+Set up automated VM scheduling based on UTC+0 time on your proxy server:
+
+```bash
+# On the proxy server
+cd arena-infra/management
+./setup_proxy_scheduler.sh
+```
+
+This will:
+- Create a Python virtual environment with required dependencies
+- Install the scheduler configuration
+- Set up a cron job to run the scheduler every minute
+
+#### Configure Your Schedule
+
+Edit the schedule configuration:
+
+```bash
+sudo nano /etc/vm_scheduler/schedule.json
+```
+
+Example schedule (creates VMs at 8 AM weekdays, stops at 6 PM daily, cleans up at 2 AM):
+
+```json
+{
+  "schedules": [
+    {
+      "name": "Morning VM startup",
+      "time": "08:00",
+      "days": ["monday", "tuesday", "wednesday", "thursday", "friday"],
+      "command": "python3 create_new_pods.py --num-machines 3 --yes",
+      "enabled": true
+    },
+    {
+      "name": "Evening VM shutdown",
+      "time": "18:00",
+      "days": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+      "command": "python3 stop_pods.py --yes",
+      "enabled": true
+    },
+    {
+      "name": "Nightly cleanup",
+      "time": "02:00",
+      "days": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+      "command": "python3 delete_pods.py --yes",
+      "enabled": true
+    }
+  ]
+}
+```
+
+#### Test and Monitor
+
+Test the scheduler (without executing commands):
+```bash
+python3 vm_scheduler.py --dry-run
+```
+
+Monitor the scheduler logs:
+```bash
+tail -f /var/log/vm_scheduler.log
+```
+
+#### Disable Scheduling
+
+To stop automated scheduling:
+```bash
+crontab -r
+```
+
+**Note:** All times are in UTC+0. The scheduler automatically updates nginx configuration when VMs are created or stopped.
+
 
 
 ---

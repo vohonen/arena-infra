@@ -1,0 +1,32 @@
+{
+  "schedules": [
+    {
+      "name": "Morning VM startup",
+      "time": "08:00",
+      "days": ["monday", "tuesday", "wednesday", "thursday", "friday"],
+      "command": "python3 create_new_pods.py --num-machines 3 --yes",
+      "enabled": true
+    },
+    {
+      "name": "Evening VM shutdown",
+      "time": "18:00", 
+      "days": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+      "command": "python3 stop_pods.py --yes",
+      "enabled": true
+    },
+    {
+      "name": "Nightly cleanup",
+      "time": "02:00",
+      "days": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+      "command": "python3 delete_pods.py --yes",
+      "enabled": true
+    },
+    {
+      "name": "Weekend light startup",
+      "time": "10:00",
+      "days": ["saturday", "sunday"],
+      "command": "python3 create_new_pods.py --num-machines 1 --yes",
+      "enabled": false
+    }
+  ]
+}
