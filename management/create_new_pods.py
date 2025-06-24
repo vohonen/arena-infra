@@ -20,7 +20,8 @@ def create_specific_pods(
         volume_space_in_gb: int = 0,
         docker_image: str = "nickypro/arena-env:5.5",
         ports: str = "8888/http,22/tcp",
-        volume_mount_path: str = "/workspace"
+        volume_mount_path: str = "/workspace",
+        skip_confirm: bool = False
     ):
     """
     Creates specified RunPod pods if they don't already exist.
@@ -88,11 +89,12 @@ def create_specific_pods(
         for pod in to_create:
             print(f"  - {pod}")
 
-        # Ask for confirmation
-        response = input("\nWould you like to proceed with creation? (y/N): ").lower()
-        if response != 'y':
-            print("Aborting pod creation.")
-            return
+        # Ask for confirmation (unless skip_confirm is True)
+        if not skip_confirm:
+            response = input("\nWould you like to proceed with creation? (y/N): ").lower()
+            if response != 'y':
+                print("Aborting pod creation.")
+                return
 
         print("\nProceeding with pod creation...")
         created_count = 0
@@ -194,6 +196,8 @@ if __name__ == "__main__":
                       help='Disk space in GB (overrides RUNPOD_DISK_SPACE_IN_GB env var)')
     parser.add_argument('--volume-space-in-gb', type=int,
                       help='Volume space in GB (overrides RUNPOD_VOLUME_SPACE_IN_GB env var)')
+    parser.add_argument('--yes', '-y', action='store_true',
+                      help='Skip confirmation prompts')
 
     # Get environment variables with defaults
     machine_prefix = os.environ["MACHINE_NAME_PREFIX"]
@@ -284,4 +288,5 @@ if __name__ == "__main__":
         disk_space_in_gb,
         volume_space_in_gb,
         docker_image,
+        skip_confirm=args.yes
     )

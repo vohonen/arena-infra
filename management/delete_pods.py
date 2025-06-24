@@ -7,7 +7,7 @@ import time
 from mydotenv import load_env
 load_env()
 
-def delete_stopped_pods(include_list, exclude_list):
+def delete_stopped_pods(include_list, exclude_list, skip_confirm=False):
     """
     Finds all stopped RunPod pods (excluding those in exclude_list)
     and prompts the user for confirmation before deleting them.
@@ -58,13 +58,14 @@ def delete_stopped_pods(include_list, exclude_list):
         print(f"Pods excluded: {excluded_count}")
         print(f"Pods to be deleted: {len(pods_to_delete)}")
 
-        # Confirm before deleting
-        confirmation = input(
-            f"\nAre you sure you want to delete these {len(pods_to_delete)} stopped pods? (y/N): "
-        )
-        if confirmation.lower() != "y":
-            print("Operation cancelled.")
-            return
+        # Confirm before deleting (unless skip_confirm is True)
+        if not skip_confirm:
+            confirmation = input(
+                f"\nAre you sure you want to delete these {len(pods_to_delete)} stopped pods? (y/N): "
+            )
+            if confirmation.lower() != "y":
+                print("Operation cancelled.")
+                return
 
         # Delete each pod
         print("\nDeleting pods...")
@@ -98,7 +99,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Delete RunPod instances')
     parser.add_argument('--include', nargs='+', help='Include specific pods by name', default=[])
     parser.add_argument('--exclude', nargs='+', help='Exclude specific pods by name', default=[])
+    parser.add_argument('--yes', '-y', action='store_true', help='Skip confirmation prompts')
     args = parser.parse_args()
 
-    delete_stopped_pods(args.include, args.exclude)
+    delete_stopped_pods(args.include, args.exclude, skip_confirm=args.yes)
 

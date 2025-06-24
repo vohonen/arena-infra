@@ -7,7 +7,7 @@ import time
 from mydotenv import load_env
 load_env()
 
-def stop_all_pods(include_list, exclude_list):
+def stop_all_pods(include_list, exclude_list, skip_confirm=False):
     # Get API key from environment
     api_key = os.getenv("RUNPOD_API_KEY")
     if not api_key:
@@ -52,11 +52,12 @@ def stop_all_pods(include_list, exclude_list):
         for pod in running_pods:
             print(f"- {pod['name']} (ID: {pod['id']})")
 
-        # Confirm before stopping
-        confirmation = input("\nAre you sure you want to stop all pods? (y/N): ")
-        if confirmation.lower() != 'y':
-            print("Operation cancelled")
-            return
+        # Confirm before stopping (unless skip_confirm is True)
+        if not skip_confirm:
+            confirmation = input("\nAre you sure you want to stop all pods? (y/N): ")
+            if confirmation.lower() != 'y':
+                print("Operation cancelled")
+                return
 
         # Stop each pod
         print("\nStopping pods...")
@@ -81,6 +82,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Stop RunPod instances')
     parser.add_argument('--include', nargs='+', help='Include specific pods by name', default=[])
     parser.add_argument('--exclude', nargs='+', help='Exclude specific pods by name', default=[])
+    parser.add_argument('--yes', '-y', action='store_true', help='Skip confirmation prompts')
     args = parser.parse_args()
 
-    stop_all_pods(args.include, args.exclude)
+    stop_all_pods(args.include, args.exclude, skip_confirm=args.yes)
